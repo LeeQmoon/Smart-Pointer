@@ -5,19 +5,30 @@ template<typename T>
 class SharedPtr{
 public:
     SharedPtr();//默认ptr为空指针
-    SharedPtr(T* _ptr);//
+    explicit SharedPtr(T* _ptr);//
     SharedPtr(const SharedPtr& example);//拷贝构造
     SharedPtr& operator=(const SharedPtr& right_op);//赋值重载
     T* operator->();
     T& operator*();
     operator bool();
     bool operator==(SharedPtr& ex);
+    bool unique();//判断保存的指针是否是唯一一个指向对象的
+    void reset();//如果唯一则释放
+    void reset(T* q);//将保存的指针指向形参所指的参数
     T* get();//获取对象保存的指针
     void swap(SharedPtr& p);//交换两对象中的指针
     unsigned getCount();//获取当前对ptr的引用数目
     ~SharedPtr();
 
 private:
+    void deleter(){
+        if(count != nullptr &&(--(*count) <= 0)){
+        delete ptr;
+        delete count;
+        ptr = nullptr;
+        count = nullptr;
+    }
+    }
     T* ptr;
     unsigned* count;//引用计数
 };
@@ -107,6 +118,36 @@ SharedPtr<T>::operator bool(){
 template<typename T>
 bool SharedPtr<T>::operator==(SharedPtr<T>& Real){
     return ptr == Real.ptr;
+}
+
+template<typename T>
+bool SharedPtr<T>::unique(){
+    if(count != nullptr && (*count) == 1)return true;
+    else 
+        return false;
+}
+
+template<typename T>
+void SharedPtr<T>::reset(){
+    if(this->unique())
+        deleter();
+    else{
+        (*count)--;
+        ptr = nullptr;
+        count = nullptr;
+    }
+}
+
+template<typename T>
+void SharedPtr<T>::reset(T* q){
+    if(this->unique())
+        deleter();
+    else{
+        if(count != nullptr)
+            (*count)--;
+    }
+    count = new unsigned(1);
+    ptr = q;
 }
 
 template<typename T>
